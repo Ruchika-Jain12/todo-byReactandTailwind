@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 const ToDoApp = () => {
   const [todos, setTodos] = useState([])
   const [input, setInput] = useState('')
-  const [searchInput, setSearchInput] = useState('') // New state for search input
+  const [searchInput, setSearchInput] = useState('')
   const [editId, setEditId] = useState(null)
+  const [darkMode, setDarkMode] = useState(false) // New state for dark mode
 
   useEffect(() => {
     const storedTodos = localStorage.getItem('todos')
@@ -16,6 +17,11 @@ const ToDoApp = () => {
         console.error('Error parsing stored todos', e)
       }
     }
+
+    const storedDarkMode = localStorage.getItem('darkMode')
+    if (storedDarkMode) {
+      setDarkMode(JSON.parse(storedDarkMode))
+    }
   }, [])
 
   useEffect(() => {
@@ -23,6 +29,10 @@ const ToDoApp = () => {
       localStorage.setItem('todos', JSON.stringify(todos))
     }
   }, [todos])
+
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode))
+  }, [darkMode])
 
   const addToDo = () => {
     if (input.trim()) {
@@ -58,15 +68,31 @@ const ToDoApp = () => {
     )
   }
 
-  const filteredTodos = todos.filter(
-    todo => todo.text.toLowerCase().includes(searchInput.toLowerCase()) // Filter based on searchInput
+  const filteredTodos = todos.filter(todo =>
+    todo.text.toLowerCase().includes(searchInput.toLowerCase())
   )
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-        <div className="w-full max-w-md p-4 bg-white rounded shadow">
+      <div
+        className={`flex flex-col items-center justify-center min-h-screen p-4 ${
+          darkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black'
+        }`}
+      >
+        <div
+          className={`w-full max-w-md p-4 ${
+            darkMode ? 'bg-gray-700' : 'bg-white'
+          } rounded shadow`}
+        >
           <h1 className="mb-4 text-2xl font-bold text-center">To-Do App</h1>
+          <div className="flex mb-3 justify-between">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="px-4 text-white bg-gray-800 rounded"
+            >
+              {darkMode ? 'Light Mode' : 'Dark Mode'}
+            </button>
+          </div>
           <div className="flex mb-3">
             <input
               type="text"
@@ -95,7 +121,7 @@ const ToDoApp = () => {
                 key={index}
                 className={`flex items-center justify-between p-2 border rounded ${
                   todo.completed ? 'line-through' : ''
-                }`}
+                } ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}
               >
                 <div>
                   <input
@@ -109,13 +135,13 @@ const ToDoApp = () => {
                 <div>
                   <button
                     onClick={() => editTodo(index)}
-                    className="px-3 mr-2 text-white bg-yellow-500 rounded"
+                    className="px-3 mr-2 text-white bg-yellow-500 hover:bg-yellow-600 rounded"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => deleteTodo(index)}
-                    className="px-3 text-white bg-red-500 rounded"
+                    className="px-3 text-white bg-red-500 hover:bg-red-600 rounded"
                   >
                     Delete
                   </button>
