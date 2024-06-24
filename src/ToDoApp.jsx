@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 const ToDoApp = () => {
   const [todos, setTodos] = useState([])
   const [input, setInput] = useState('')
+  const [searchInput, setSearchInput] = useState('') // New state for search input
   const [editId, setEditId] = useState(null)
 
   useEffect(() => {
@@ -21,25 +22,26 @@ const ToDoApp = () => {
     if (todos.length > 0) {
       localStorage.setItem('todos', JSON.stringify(todos))
     }
-    // else {
-    //   localStorage.removeItem('todos')
-    // }
   }, [todos])
 
   const addToDo = () => {
     if (input.trim()) {
       if (editId !== null) {
-        setTodos(todos.map((todo, index) => (index === editId ? input : todo)))
+        setTodos(
+          todos.map((todo, index) =>
+            index === editId ? { ...todo, text: input } : todo
+          )
+        )
         setEditId(null)
       } else {
-        setTodos([...todos, input])
+        setTodos([...todos, { text: input, completed: false }])
       }
       setInput('')
     }
   }
 
   const editTodo = index => {
-    setInput(todos[index])
+    setInput(todos[index].text)
     setEditId(index)
   }
 
@@ -48,17 +50,30 @@ const ToDoApp = () => {
     setTodos(newTodos)
   }
 
+  const toggleComplete = index => {
+    setTodos(
+      todos.map((todo, i) =>
+        i === index ? { ...todo, completed: !todo.completed } : todo
+      )
+    )
+  }
+
+  const filteredTodos = todos.filter(
+    todo => todo.text.toLowerCase().includes(searchInput.toLowerCase()) // Filter based on searchInput
+  )
+
   return (
     <>
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
         <div className="w-full max-w-md p-4 bg-white rounded shadow">
           <h1 className="mb-4 text-2xl font-bold text-center">To-Do App</h1>
-          <div className="flex mb-4">
+          <div className="flex mb-3">
             <input
               type="text"
               className="flex-1 p-2 border rounded"
               value={input}
               onChange={e => setInput(e.target.value)}
+              placeholder="Add Task"
             />
             <button
               onClick={addToDo}
@@ -67,13 +82,30 @@ const ToDoApp = () => {
               {editId !== null ? 'Update Note' : 'Add Note'}
             </button>
           </div>
+          <input
+            type="text"
+            className="w-full p-2 mb-3 border rounded"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            placeholder="Search Tasks"
+          />
           <ul className="space-y-2">
-            {todos.map((todo, index) => (
+            {filteredTodos.map((todo, index) => (
               <li
                 key={index}
-                className="flex items-center justify-between p-2 border rounded"
+                className={`flex items-center justify-between p-2 border rounded ${
+                  todo.completed ? 'line-through' : ''
+                }`}
               >
-                <span>{todo}</span>
+                <div>
+                  <input
+                    type="checkbox"
+                    checked={todo.completed}
+                    onChange={() => toggleComplete(index)}
+                    className="mr-2"
+                  />
+                  <span>{todo.text}</span>
+                </div>
                 <div>
                   <button
                     onClick={() => editTodo(index)}
